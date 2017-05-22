@@ -1,0 +1,443 @@
+swagger: "2.0"
+info:
+  version: "0.0.1"
+  title: Calendar Service
+# during dev, should point to your local machine
+host: localhost:10013
+# basePath prefixes all resource paths
+basePath: /
+#
+schemes:
+  # tip: remove http to make production-grade
+  - http
+  - https
+# format of bodies a client can send (Content-Type)
+consumes:
+  - application/json
+# format of the responses to the client (Accepts)
+produces:
+  - application/json
+paths:
+  /calendar/{bsu_id}:
+      x-swagger-router-controller: CalendarController
+      get:
+        tags:
+         - Calendar
+        summary: Get by bsu_id
+        description: Returns all events by bsu_id
+        operationId: getEventsByBSUId
+        parameters:
+        - name: bsu_id
+          in: path
+          description: ID of student to fetch events
+          required: true
+          type: string
+          default: "111111111"
+        responses:
+          "200":
+            description: Success
+            schema:
+              # a pointer to a definition
+              $ref: "#/definitions/EventsResponse"
+          # responses may fall through to errors
+          default:
+            description: Error
+            schema:
+              $ref: "#/definitions/ErrorResponse"
+  /calendar/hall/{hall}:
+      x-swagger-router-controller: CalendarController
+      get:
+        tags:
+         - Calendar
+        summary: Get by hall
+        description: Returns all events by hall
+        operationId: getEventsByHall
+        parameters:
+        - name: hall
+          in: path
+          description: name of hall to search for
+          required: true
+          type: string
+          default: "KING"
+        responses:
+          "200":
+            description: Success
+            schema:
+              # a pointer to a definition
+              $ref: "#/definitions/EventsResponse"
+          # responses may fall through to errors
+          default:
+            description: Error
+            schema:
+              $ref: "#/definitions/ErrorResponse"
+  /calendar/map:
+      # binds a127 app logic to a route
+      x-swagger-router-controller: CalendarController
+      post:
+        tags:
+         - Calendar
+        summary: Get by bsu_ids
+        description: Gets all students based on an array of ids
+        # used as the method name of the controller
+        operationId: getAllEventsByBSUIDs
+        parameters:
+          - name: idArray
+            in: body
+            description: the array of student ids
+            required: true
+            schema:
+              type: array
+              items:
+                type: string
+        responses:
+          "200":
+            description: Success
+            schema:
+              # a pointer to a definition
+              $ref: "#/definitions/EventsResponse"
+          # responses may fall through to errors
+          default:
+            description: Error
+            schema:
+              $ref: "#/definitions/ErrorResponse"
+  /calendar/search:
+      x-swagger-router-controller: CalendarController
+      get:
+        tags:
+         - Calendar
+        summary: Search Events
+        description: Returns Events by search
+        operationId: getEventsBySearch
+        parameters:
+        - name: any
+          in: query
+          description: a wildcard search testing all fields
+          required: false
+          type: string
+        responses:
+          "200":
+            description: Success
+            schema:
+              # a pointer to a definition
+              $ref: "#/definitions/EventsResponse"
+          # responses may fall through to errors
+          default:
+            description: Error
+            schema:
+              $ref: "#/definitions/ErrorResponse"
+  /calendar:
+    x-swagger-router-controller: CalendarController
+    post:
+      tags:
+       - Calendar
+      summary: Creates a new Calendar Event
+      description: Creates a new Event
+      operationId: createEvent
+      parameters:
+        - name: eventObj
+          in: body
+          description: The Event Object
+          required: true
+          schema:
+            $ref: "#/definitions/EventObj"
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/EventCreateResponse"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+    put:
+      tags:
+       - Calendar
+      summary: Updates a Calendar Event
+      description: Updates a Calendar Event
+      operationId: updateEvent
+      parameters:
+        - name: updateEventObj
+          in: body
+          description: The Event Object
+          required: true
+          schema:
+            $ref: "#/definitions/UpdateEventObj"
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/EventUpdateResponse"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /calendar/change:
+    x-swagger-router-controller: CalendarController
+    get:
+      tags:
+       - Calendar
+      summary: Search Shift Change Requests
+      description: Returns Shift Change Request by search
+      operationId: getPendingShiftRequests
+      parameters:
+      - name: pending
+        in: query
+        description: Field that determines what state of pending to search for. Either 'employee' or 'admin'
+        required: true
+        type: string
+      - name: hall
+        in: query
+        description: Hall to search for pending request
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            # a pointer to a definition
+            $ref: "#/definitions/ChangeRequestsResponse"
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+    post:
+      tags:
+       - Calendar
+      summary: Creates a Change Event Request
+      description: Creates a new Change Event Request
+      operationId: requestShiftChange
+      parameters:
+        - name: changeObj
+          in: body
+          description: The Change Object
+          required: true
+          schema:
+            $ref: "#/definitions/ChangeObj"
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/ChangeCreateResponse"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /swagger:
+    x-swagger-pipe: swagger_raw
+# complex objects have schema definitions
+definitions:
+  EventObj:
+    required:
+      - bsu_id
+      - hall
+      - type
+      - title
+      - description
+      - start_time
+      - end_time
+    description: event object
+    properties:
+      bsu_id:
+        type: string
+      hall:
+        type: string
+      type:
+        type: string
+      title:
+        type: string
+      description:
+        type: string
+      start_time:
+        type: string
+      end_time:
+        type: string
+  UpdateEventObj:
+    required:
+      - id
+    description: event object
+    properties:
+      id:
+        type: string
+      hall:
+        type: string
+      bsu_id:
+        type: string
+      type:
+        type: string
+      title:
+        type: string
+      description:
+        type: string
+      start_time:
+        type: string
+      end_time:
+        type: string
+  ChangeObj:
+    required:
+      - hall
+      - requested_by
+      - change_with
+      - event_id_one
+      - event_id_two
+    description: change event request object
+    properties:
+      hall:
+        type: string
+      requested_by:
+        type: string
+      change_with:
+        type: string
+      event_id_one:
+        type: string
+      event_id_two:
+        type: string
+  CreateChangeSuccessObj:
+    required:
+      - hall
+      - requested_by
+      - change_with
+      - event_id_one
+      - event_id_two
+      - employee_approved
+      - admin_approved
+    description: change event request success object
+    properties:
+      hall:
+        type: string
+      requested_by:
+        type: string
+      change_with:
+        type: string
+      event_id_one:
+        type: string
+      event_id_two:
+        type: string
+      employee_approved:
+        type: object
+      admin_approved:
+        type: object
+  EventsResponse:
+    required:
+      - status
+      - error
+      - description
+      - data
+    properties:
+      status:
+        type: integer
+      error:
+        type: boolean
+      description:
+        type: string
+      data:
+        type: array
+        items:
+          type: object
+          properties:
+            bsu_id:
+              type: string
+            hall:
+              type: string
+            type:
+              type: string
+            title:
+              type: string
+            description:
+              type: string
+            start_time:
+              type: string
+            end_time:
+              type: string
+  EventCreateResponse:
+    required:
+      - status
+      - error
+      - description
+      - data
+    properties:
+      status:
+        type: integer
+      error:
+        type: boolean
+      description:
+        type: string
+        default: "Calendar Event Created"
+      data:
+        $ref: "#/definitions/EventObj"
+  EventUpdateResponse:
+    required:
+      - status
+      - error
+      - description
+      - data
+    properties:
+      status:
+        type: integer
+      error:
+        type: boolean
+      description:
+        type: string
+        default: "Calendar Event Updated"
+      data:
+        $ref: "#/definitions/EventObj"
+  ChangeCreateResponse:
+    required:
+      - status
+      - error
+      - description
+      - data
+    properties:
+      status:
+        type: integer
+      error:
+        type: boolean
+      description:
+        type: string
+        default: "Change Event Request Created"
+      data:
+        $ref: "#/definitions/CreateChangeSuccessObj"
+  ChangeRequestsResponse:
+    required:
+      - status
+      - error
+      - description
+      - data
+    properties:
+      status:
+        type: integer
+      error:
+        type: boolean
+      description:
+        type: string
+      data:
+        type: array
+        items:
+          type: object
+          properties:
+            hall:
+              type: string
+            requested_by:
+              type: string
+            change_with:
+              type: string
+            event_id_one:
+              type: string
+            event_id_two:
+              type: string
+            employee_approved:
+              type: object
+            admin_approved:
+              type: object
+  ErrorResponse:
+    required:
+      - status
+      - error
+      - description
+    properties:
+      status:
+        type: integer
+      error:
+        type: boolean
+      description:
+        type: string
